@@ -1,0 +1,17 @@
+﻿.silhouette-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgb(98 255 242 / 35%);
+  border-radius: 1rem;
+  background: #0b141c;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .silhouette-canvas {
+    border-width: 3px;
+    border-color: #f6f7f8;
+  }
+}
