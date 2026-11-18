@@ -123,7 +123,7 @@ function waitForMetadata(video: HTMLVideoElement): Promise<void> {
 
 export function EyeMonitorProvider(props: {
   children: React.ReactNode;
-}): JSX.Element {
+}) {
   const [snapshot, setSnapshot] = useState<MonitorSnapshot>(INITIAL_SNAPSHOT);
   const snapshotRef = useRef(snapshot);
   const videoRef = useRef<HTMLVideoElement | null>(null);

@@ -6,5 +6,6 @@ backend/.venv/
 backend/beetles.db
 frontend/node_modules/
 frontend/dist/
+*.tsbuildinfo
 .env
 .env.*

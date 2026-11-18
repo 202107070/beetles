@@ -2,7 +2,7 @@
 import { useEyeMonitorCanvas } from './EyeMonitorContext';
 import './monitoring.css';
 
-export function SilhouetteCanvas(): JSX.Element {
+export function SilhouetteCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { registerCanvas } = useEyeMonitorCanvas();
 
