@@ -1,0 +1,103 @@
+﻿<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>비틀비틀 집중 경고</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        color: #f8fafc;
+        background: #0b141c;
+        transition: background-color 120ms linear;
+      }
+
+      main {
+        width: min(90vw, 640px);
+        padding: 3rem 2rem;
+        text-align: center;
+        border: 3px solid #62fff2;
+        border-radius: 1.25rem;
+      }
+
+      h1 { margin: 0; font-size: clamp(2rem, 7vw, 4.5rem); }
+      p { margin: 1rem 0 0; color: #cbd5e1; font-size: 1.1rem; }
+
+      body[data-state="warning"] {
+        background: #b91c1c;
+        animation: warning-flash 650ms steps(1, end) infinite;
+      }
+
+      body[data-state="warning"] main {
+        border-color: #fff7ed;
+        background: rgb(67 20 7 / 78%);
+      }
+
+      body[data-state="paused"] main { border-color: #fbbf24; }
+      body[data-state="ended"] main { border-color: #94a3b8; }
+
+      @keyframes warning-flash {
+        0%, 100% { background: #b91c1c; }
+        50% { background: #f97316; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        body[data-state="warning"] {
+          animation: none;
+          background: #7f1d1d;
+        }
+
+        body[data-state="warning"] main {
+          border-width: 12px;
+          border-color: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body data-state="ready">
+    <main aria-live="assertive" aria-atomic="true">
+      <h1 id="message">집중 감지 중</h1>
+      <p id="detail">이 창을 열어 둔 상태로 집중 세션을 진행하세요.</p>
+    </main>
+    <script>
+      (() => {
+        const SOURCE = 'beetle-monitor';
+        const message = document.getElementById('message');
+        const detail = document.getElementById('detail');
+
+        const states = {
+          READY: ['ready', '집중 감지 중', '이 창을 열어 둔 상태로 집중 세션을 진행하세요.'],
+          WARNING: ['warning', '눈을 뜨고 다시 집중하세요', '양쪽 눈 감김이 7초 동안 감지되었습니다.'],
+          RECOVERED: ['ready', '집중 감지 중', '눈 뜸을 확인했습니다. 감지를 계속합니다.'],
+          PAUSED: ['paused', '일시정지됨', '세션을 재개하면 감지를 다시 시작합니다.'],
+          SESSION_END: ['ended', '집중 세션 종료', '세션이 종료되어 이 창을 닫습니다.'],
+        };
+
+        window.addEventListener('message', (event) => {
+          if (event.origin !== location.origin || event.data?.source !== SOURCE) return;
+          const state = states[event.data.type];
+          if (!state) return;
+
+          document.body.dataset.state = state[0];
+          message.textContent = state[1];
+          detail.textContent = state[2];
+
+          if (event.data.type === 'SESSION_END') {
+            window.setTimeout(() => window.close(), 250);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
