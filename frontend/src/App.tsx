@@ -141,20 +141,33 @@ export function App() {
 
     const activeToken = tokenRef.current;
     const activeSession = sessionRef.current;
-    if (!warningStarted || !activeToken || !activeSession) {
+    if (
+      endingRef.current ||
+      !warningStarted ||
+      !activeToken ||
+      !activeSession
+    ) {
       return;
     }
 
     void apiClient
       .recordWarning(activeToken, activeSession.id)
       .then((updated) => {
-        if (sessionRef.current?.id === updated.id) {
+        if (
+          !endingRef.current &&
+          sessionRef.current?.id === activeSession.id
+        ) {
           sessionRef.current = updated;
           setSession(updated);
         }
       })
       .catch((warningError) => {
-        setError(`경고 횟수를 저장하지 못했습니다: ${errorMessage(warningError)}`);
+        if (
+          !endingRef.current &&
+          sessionRef.current?.id === activeSession.id
+        ) {
+          setError(`경고 횟수를 저장하지 못했습니다: ${errorMessage(warningError)}`);
+        }
       });
   }, [monitor.warningActive, screen]);
 
@@ -236,7 +249,14 @@ export function App() {
   }
 
   async function handlePause() {
-    if (!sessionRef.current || !tokenRef.current || sessionActionPending) {
+    const activeSession = sessionRef.current;
+    const activeToken = tokenRef.current;
+    if (
+      !activeSession ||
+      !activeToken ||
+      sessionActionPending ||
+      endingRef.current
+    ) {
       return;
     }
 
@@ -249,20 +269,42 @@ export function App() {
 
     try {
       const updated = await apiClient.pauseSession(
-        tokenRef.current,
-        sessionRef.current.id,
+        activeToken,
+        activeSession.id,
       );
-      sessionRef.current = updated;
-      setSession(updated);
+      if (
+        !endingRef.current &&
+        sessionRef.current?.id === activeSession.id
+      ) {
+        sessionRef.current = updated;
+        setSession(updated);
+      }
     } catch (pauseError) {
-      setError(`일시정지 상태를 서버와 동기화하지 못했습니다: ${errorMessage(pauseError)}`);
+      if (
+        !endingRef.current &&
+        sessionRef.current?.id === activeSession.id
+      ) {
+        setError(`일시정지 상태를 서버와 동기화하지 못했습니다: ${errorMessage(pauseError)}`);
+      }
     } finally {
-      setSessionActionPending(false);
+      if (
+        !endingRef.current &&
+        sessionRef.current?.id === activeSession.id
+      ) {
+        setSessionActionPending(false);
+      }
     }
   }
 
   async function handleResume() {
-    if (!sessionRef.current || !tokenRef.current || sessionActionPending) {
+    const activeSession = sessionRef.current;
+    const activeToken = tokenRef.current;
+    if (
+      !activeSession ||
+      !activeToken ||
+      sessionActionPending ||
+      endingRef.current
+    ) {
       return;
     }
     if (remainingRef.current <= 0) {
@@ -274,18 +316,34 @@ export function App() {
     setError(null);
     try {
       const updated = await apiClient.resumeSession(
-        tokenRef.current,
-        sessionRef.current.id,
+        activeToken,
+        activeSession.id,
       );
+      if (
+        endingRef.current ||
+        sessionRef.current?.id !== activeSession.id
+      ) {
+        return;
+      }
       sessionRef.current = updated;
       setSession(updated);
       deadlineRef.current = Date.now() + remainingRef.current;
       monitorRef.current.resumeDetection();
       setIsPaused(false);
     } catch (resumeError) {
-      setError(`재개 상태를 서버와 동기화하지 못했습니다: ${errorMessage(resumeError)}`);
+      if (
+        !endingRef.current &&
+        sessionRef.current?.id === activeSession.id
+      ) {
+        setError(`재개 상태를 서버와 동기화하지 못했습니다: ${errorMessage(resumeError)}`);
+      }
     } finally {
-      setSessionActionPending(false);
+      if (
+        !endingRef.current &&
+        sessionRef.current?.id === activeSession.id
+      ) {
+        setSessionActionPending(false);
+      }
     }
   }
 
